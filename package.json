@@ -16,15 +16,21 @@
     "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/prismic": "^1.4.2",
     "@prismicio/slice-simulator-vue": "^0.2.1",
+    "animate.css": "^4.1.1",
     "bootstrap": "^4.6.1",
     "bootstrap-vue": "^2.21.2",
+    "Console": "^1.1.0",
     "core-js": "^3.19.3",
     "ethers": "^5.6.5",
     "nuxt": "^2.15.8",
+    "nuxt-socket-io": "^2.0.3",
+    "qs": "^6.10.3",
+    "slopswapxlibs": "^1.0.0",
     "vue": "^2.6.14",
     "vue-server-renderer": "^2.6.14",
     "vue-template-compiler": "^2.6.14",
-    "webpack": "^4.46.0"
+    "webpack": "^4.46.0",
+    "websocket-stream": "^5.5.2"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.3",

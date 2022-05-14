@@ -15,6 +15,9 @@ export default {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+    ],
+    script: [
+      { hid: 'fontawesome', src: 'https://kit.fontawesome.com/3b6ad1dd5e.js', crossorigin: 'anonymous' }
     ]
   },
 
@@ -48,8 +51,21 @@ export default {
     // https://go.nuxtjs.dev/bootstrap
     'bootstrap-vue/nuxt',
     // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    'nuxt-socket-io'
   ],
+
+  // Nuxt-Socket-IO Documentation https://nuxt-socket-io.netlify.app/
+  io: {
+    // module options
+    sockets: [{
+      name: 'wbnbcake',
+      url: 'wss://dex.binance.org/api/ws/WBNB_Cake-1DE@kline_1h',
+      vuex: { /* see section below */ },
+      namespaces: { /* see section below */ }
+    }
+    ]
+  },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {

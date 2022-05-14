@@ -133,7 +133,7 @@ export async function removeLiquidity (
   }
 
   const liquidity = Getliquidity(liquidityTokens)
-  console.log('liquidity: ', liquidity)
+  alert('liquidity: ', liquidity)
 
   const amount1Min = ethers.utils.parseUnits(String(amount1min), token1Decimals)
   const amount2Min = ethers.utils.parseUnits(String(amount2min), token2Decimals)
