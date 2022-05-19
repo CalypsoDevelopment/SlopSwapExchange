@@ -9,7 +9,7 @@
             @click="$bvModal.show('liquiditymakerselect')"
           >
             <b-img
-              :src="require(`@/assets/img/tokens/${LiquidityMakerToken.TokenContract}.svg`)"
+              :src="require(`@/assets/img/tokens/${LiquidityMakerToken.TokenContract}.png`)"
               fluid
               alt="Selected token that user wants to trade"
               class="maker-token-img"
@@ -31,7 +31,7 @@
                 @click="changeLiquidityMakerToken(token.ChainID, token.TokenName, token.TokenSymbol, token.TokenContract, token.TokenDecimal, token.TokenType, token.BrandPrimary)"
               >
                 <b-img
-                  :src="require(`@/assets/img/tokens/${token.TokenContract}.svg`)"
+                  :src="require(`@/assets/img/tokens/${token.TokenContract}.png`)"
                   fluid
                   alt="Selected token that user wants to trade"
                   class="maker-token-img"

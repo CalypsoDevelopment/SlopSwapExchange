@@ -9,7 +9,7 @@
             @click="$bvModal.show('makerselect')"
           >
             <b-img
-              :src="require(`@/assets/img/tokens/${MakerToken.TokenContract}.svg`)"
+              :src="require(`@/assets/img/tokens/${MakerToken.TokenContract}.png`)"
               fluid
               alt="Selected token that user wants to trade"
               class="maker-token-img"
@@ -31,7 +31,7 @@
                 @click="changeMakerToken(token.ChainID, token.TokenName, token.TokenSymbol, token.TokenContract, token.TokenDecimal, token.TokenType, token.BrandPrimary)"
               >
                 <b-img
-                  :src="require(`@/assets/img/tokens/${token.TokenContract}.svg`)"
+                  :src="require(`@/assets/img/tokens/${token.TokenContract}.png`)"
                   fluid
                   alt="Selected token that user wants to trade"
                   class="maker-token-img"

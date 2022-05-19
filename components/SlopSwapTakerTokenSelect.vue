@@ -9,7 +9,7 @@
             @click="$bvModal.show('takerselect')"
           >
             <b-img
-              :src="require(`@/assets/img/tokens/${TakerToken.TokenContract}.svg`)"
+              :src="require(`@/assets/img/tokens/${TakerToken.TokenContract}.png`)"
               fluid
               alt="Selected token that user wants to receive"
               class="taker-token-img"
@@ -31,7 +31,7 @@
                 @click="changeTakerToken(token.ChainID, token.TokenName, token.TokenSymbol, token.TokenContract, token.TokenDecimal, token.TokenType, token.BrandPrimary)"
               >
                 <b-img
-                  :src="require(`@/assets/img/tokens/${token.TokenContract}.svg`)"
+                  :src="require(`@/assets/img/tokens/${token.TokenContract}.png`)"
                   fluid
                   alt="Selected token that user wants to trade"
                   class="taker-token-img"
