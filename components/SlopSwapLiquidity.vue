@@ -124,7 +124,7 @@
               <h2 class="secondary-title">Your Liquidity Pair</h2>
               <b-link :href="`https://bscscan.com/token/${PairCheckResp}`" target="_blank">
                 <b-img
-                  :src="require(`@/assets/img/tokens/${TokenA.TokenContract}.svg`)"
+                  :src="require(`@/assets/img/tokens/${TokenA.TokenContract}.png`)"
                   fluid
                   alt="Selected token that user wants to receive"
                   class="small-pair-token-img"
@@ -133,7 +133,7 @@
 
                 <span class="small-pair-symbols">{{ TokenB.TokenSymbol }}</span>
                 <b-img
-                  :src="require(`@/assets/img/tokens/${TokenB.TokenContract}.svg`)"
+                  :src="require(`@/assets/img/tokens/${TokenB.TokenContract}.png`)"
                   fluid
                   alt="Selected token that user wants to receive"
                   class="small-pair-token-img"
