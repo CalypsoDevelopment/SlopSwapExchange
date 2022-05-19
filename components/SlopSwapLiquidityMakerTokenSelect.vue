@@ -93,6 +93,7 @@ export default {
       // this.$bvModal.hide('TokenB')
       this.quoteResponse = {}
       // const MakerTokenContract = this.MakerToken.TokenContract
+      this.$emit('changeLiquidityMakerBalance', this.LiquidityMakerToken)
       this.$emit('changeLiquidityMakerToken', this.LiquidityMakerToken)
     }
   } // END OF METHODS

@@ -40,7 +40,7 @@
         </div>
       </b-col>
       <b-col cols="4" class="text-center">
-        <SlopSwapLiquidityMakerTokenSelect @changeLiquidityMakerToken="ChangePairTokenA($event)" />
+        <SlopSwapLiquidityMakerTokenSelect @changeLiquidityMakerToken="ChangePairTokenA($event)" @changeLiquidityMakerBalance="ChangePairTokenABalance($event)" />
         <div>
           <b-form-input v-model="TokenAPairAmount" class="maker-liquidity-amount" placeholder="0.0" @change="PairQuoteCheck()" />
           <!--<div class="mt-2 dollar-value">
@@ -77,7 +77,7 @@
         </div>
       </b-col>
       <b-col cols="4" class="text-center">
-        <SlopSwapLiquidityTakerTokenSelect @changeLiquidityTakerToken="ChangePairTokenB($event)" />
+        <SlopSwapLiquidityTakerTokenSelect @changeLiquidityTakerToken="ChangePairTokenB($event)" @changeLiquidityTakerBalance="ChangePairTokenBBalance($event)" />
         <div>
           <b-form-input v-model="TokenBPairAmount" class="taker-liquidity-amount" placeholder="0.0" />
           <!--<div class="mt-2 dollar-value">
@@ -535,6 +535,108 @@ export default {
           String(account),
           deadline
         )
+      }
+    },
+    async ChangePairTokenABalance (MakerTokenCon) {
+      // Define Token A & B
+      // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
+      // A Web3Provider wraps a standard Web3 provider, which ism
+      // what MetaMask injects as window.ethereum into each page
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+      // MetaMask requires requesting permission to connect users accounts
+      await provider.send('eth_requestAccounts', [])
+
+      // The MetaMask plugin also allows signing transactions to
+      // send ether and pay to change state within the blockchain.
+      // For this, you need the account signer...
+      // const signer = provider.getSigner()
+      // alert('Signer: ' + signer)
+
+      const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // this.UserAccount = account.address
+      // alert('Wallet User: ' + account)
+      // alert('Before Token Symbol')
+
+      if (MakerTokenCon.TokenSymbol === 'WBNB') {
+        // Get Token Balance through Metamask
+        const TokenABalance = await provider.getBalance(String(account))
+        // alert(TokenABalance)
+        const ReturnTokenABalance = ethers.utils.formatEther(String(TokenABalance))
+        // alert('User TokenA Balance: ' + ConvertWeiToEther + ' WBNB')
+
+        this.TokenAUserBalance = ReturnTokenABalance.substring(0, 6) + ' ' + MakerTokenCon.TokenSymbol
+      } else {
+        const BEP20TokenA = new ethers.Contract(
+          MakerTokenCon.TokenContract, [
+            'function name() view returns (string)',
+            'function symbol() view returns (string)',
+            'function balanceOf(address) view returns (uint)'
+          ],
+          provider
+        )
+        const TokenAbalance = await BEP20TokenA.balanceOf(String(account))
+        // alert(TokenAbalance)
+        const ReturnTokenAbalance = ethers.utils.formatUnits(String(TokenAbalance), MakerTokenCon.TokenDecimal)
+        this.TokenAUserBalance = ReturnTokenAbalance.substring(0, 8) + ' ' + MakerTokenCon.TokenSymbol
+      }
+      const BEP20TokenB = new ethers.Contract(
+        this.TokenB.TokenContract, [
+          'function name() view returns (string)',
+          'function symbol() view returns (string)',
+          'function balanceOf(address) view returns (uint)'
+        ],
+        provider
+      )
+
+      const TokenBbalance = await BEP20TokenB.balanceOf(String(account))
+      // alert(TokenBbalance)
+      const ReturnTokenBbalance = ethers.utils.formatUnits(String(TokenBbalance), this.TokenB.TokenDecimal)
+      this.TokenBUserBalance = ReturnTokenBbalance.substring(0, 8) + ' ' + this.TokenB.TokenSymbol
+    },
+    async ChangePairTokenBBalance (TakerTokenCon) {
+      // Define Token A & B
+      // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
+      // A Web3Provider wraps a standard Web3 provider, which ism
+      // what MetaMask injects as window.ethereum into each page
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+      // MetaMask requires requesting permission to connect users accounts
+      await provider.send('eth_requestAccounts', [])
+
+      // The MetaMask plugin also allows signing transactions to
+      // send ether and pay to change state within the blockchain.
+      // For this, you need the account signer...
+      // const signer = provider.getSigner()
+      // alert('Signer: ' + signer)
+
+      const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // this.UserAccount = account.address
+      // alert('Wallet User: ' + account)
+      // alert('Before Token Symbol')
+
+      if (TakerTokenCon.TokenSymbol === 'WBNB') {
+        // Get Token Balance through Metamask
+        const TokenBBalance = await provider.getBalance(String(account))
+        // alert(TokenABalance)
+        const ReturnTokenBBalance = ethers.utils.formatEther(String(TokenBBalance))
+        // alert('User TokenA Balance: ' + ConvertWeiToEther + ' WBNB')
+
+        this.TokenBUserBalance = ReturnTokenBBalance.substring(0, 6) + ' ' + TakerTokenCon.TokenSymbol
+      } else {
+        const BEP20TokenB = new ethers.Contract(
+          TakerTokenCon.TokenContract, [
+            'function name() view returns (string)',
+            'function symbol() view returns (string)',
+            'function balanceOf(address) view returns (uint)'
+          ],
+          provider
+        )
+
+        const TokenBbalance = await BEP20TokenB.balanceOf(String(account))
+        // alert(TokenBbalance)
+        const ReturnTokenBbalance = ethers.utils.formatUnits(String(TokenBbalance), TakerTokenCon.TokenDecimal)
+        this.TokenBUserBalance = ReturnTokenBbalance.substring(0, 8) + ' ' + TakerTokenCon.TokenSymbol
       }
     },
     async RetrieveUserBalances () {
