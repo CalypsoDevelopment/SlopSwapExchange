@@ -135,11 +135,14 @@ export default {
   border-radius: 4rem;
 }
 .maker-token-select-btn {
-  font-family: 'Arimo', sans-serif;
+  font-family: 'Fredoka One', cursive !important;
+  color: #FFFFFF;
   font-variant: all-small-caps;
   font-weight: 500;
-  font-size: 2.6rem;
-  padding: 1rem;
+  font-size: 2rem;
+  padding: 0.45rem;
+  margin-right: 0rem;
+  margin-left: 0rem;
   border-radius: 4rem;
 }
 .maker-token-img {

@@ -100,7 +100,7 @@ export default {
 } // END OF EXPORT DEFAULT
 </script>
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
 .taker-token-container {
   margin-top: 2rem;
   margin-bottom:2rem;
@@ -111,11 +111,12 @@ export default {
   border-radius: 4rem;
 }
 .taker-token-select-btn {
-  font-family: 'Arimo', sans-serif;
+  font-family: 'Fredoka One', cursive !important;
+  color: #FFFFFF;
   font-variant: all-small-caps;
   font-weight: 500;
-  font-size: 2.6rem;
-  padding: 1rem;
+  font-size: 2rem;
+  padding: 0.45rem;
   border-radius: 4rem;
 }
 .taker-token-img {

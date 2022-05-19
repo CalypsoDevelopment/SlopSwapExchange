@@ -18,6 +18,13 @@
           </b-nav>
         </div>
       </b-col>
+      <b-col cols="12">
+        <div>
+          <h1 class="main-title">
+            <span class="blue-gray">Slop</span>Swap
+          </h1>
+        </div>
+      </b-col>
       <b-col cols="5" class="text-center">
         <SlopSwapMakerTokenSelect @changeMakerToken="ChangeSellToken($event)" @changeMakerTokenBalance="MakerReCheckBalance($event)" />
         <div>
@@ -28,8 +35,8 @@
           </div>-->
         </div>
         <div>
-          <div class="mt-2">
-            Wallet Balance: {{ SellTokenUserBalance }}
+          <div class="mt-1 mb-1">
+            <span class="label-title"><strong>Wallet Balance: {{ SellTokenUserBalance }} </strong></span>
           </div>
           <b-form-input v-model="SellTokenUserBalance" placeholder="Wallet Balance" disabled class="hidden-field" />
         </div>
@@ -50,8 +57,8 @@
           </div>-->
         </div>
         <div>
-          <div class="mt-2">
-            Wallet Balance: {{ BuyTokenUserBalance }}
+          <div class="mt-1 mb-1">
+            <span class="label-title"><strong>Wallet Balance: {{ BuyTokenUserBalance }} </strong></span>
           </div>
           <b-form-input v-model="BuyTokenUserBalance" placeholder="Wallet Balance" disabled class="hidden-field" />
         </div>
@@ -139,7 +146,7 @@ export default {
         { value: 0.07, text: '7%' },
         { value: 0.08, text: '8%' },
         { value: 0.09, text: '9%' },
-        { value: 0.1, text: '10%' },
+        { value: 0.10, text: '10%' },
         { value: 0.11, text: '11%' },
         { value: 0.12, text: '12%' },
         { value: 0.13, text: '13%' },
@@ -537,17 +544,36 @@ export default {
 }
 </script>
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+.label-title {
+  font-variant-caps: all-small-caps;
+  font-size: 1.3rem;
+  font-family: 'Fredoka One', cursive;
+  color: #505960;
+}
+.main-title {
+  font-variant-caps: all-small-caps;
+  font-weight: 600;
+  font-size: 2.9rem;
+  font-family: 'Fredoka One', cursive;
+}
+.blue-gray {
+  color: #17a2b8;
+}
 .hidden-field {
   visibility: hidden;
 }
 .left-group-btn {
   border-top-left-radius: 4rem;
   border-bottom-left-radius: 4rem;
+  font-variant-caps: all-small-caps;
+  font-size: 0.85rem;
 }
 .right-group-btn {
   border-top-right-radius: 4rem;
   border-bottom-right-radius: 4rem;
+  font-variant-caps: all-small-caps;
+  font-size: 0.85rem;
 }
 .slippage-selector {
   background-color: transparent;

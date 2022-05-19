@@ -115,8 +115,8 @@ export default {
   color: #FFFFFF;
   font-variant: all-small-caps;
   font-weight: 500;
-  font-size: 2.6rem;
-  padding: 1rem;
+  font-size: 2rem;
+  padding: 0.45rem;
   border-radius: 4rem;
 }
 .taker-token-img {

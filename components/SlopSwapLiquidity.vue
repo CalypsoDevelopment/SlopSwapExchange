@@ -21,25 +21,11 @@
       <b-col cols="12">
         <div>
           <h1 class="main-title">
-            <span class="blue-gray">Slop</span>Swap Liquidity
+            <span class="blue-gray">Slop</span>Swap <span class="blue-gray">Liquidity</span>
           </h1>
         </div>
-        <div @change="CheckTradingPair()">
-          <div v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'">
-            <span class="no-exist"><i class="fa-solid fa-square-x" /> Pair Does Not Exist Yet!</span><br>
-            <b-button v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'" pill variant="primary" class="ml-1 mr-1 button-text" @click="CreateTradingPair()">
-              Create Pair
-            </b-button>
-          </div>
-          <div v-else>
-            <span class="label-title">View Pair Information on bscscan.com</span><br>
-            <b-link :href="`https://bscscan.com/token/${PairCheckResp}`" target="_blank">
-              <span class="link-color">{{ PairCheckResp }}</span>
-            </b-link>
-          </div>
-        </div>
       </b-col>
-      <b-col cols="4" class="text-center">
+      <b-col cols="5" class="text-center">
         <SlopSwapLiquidityMakerTokenSelect @changeLiquidityMakerToken="ChangePairTokenA($event)" @changeLiquidityMakerBalance="ChangePairTokenABalance($event)" />
         <div>
           <b-form-input v-model="TokenAPairAmount" class="maker-liquidity-amount" placeholder="0.0" @change="PairQuoteCheck()" />
@@ -48,35 +34,69 @@
             {{ MakerDollarAmount }}
           </div>-->
         </div>
-        <div class="text-center mt-4 mb-1">
+        <div class="text-centermt-1 mb-1">
           <span class="label-title"><strong>Wallet Balance:</strong> {{ TokenAUserBalance }}</span>
         </div>
       </b-col>
-      <b-col cols="4" class="text-center">
+      <b-col cols="2" class="text-center">
         <div class="align-middle">
-          <!--<i class="fa-solid fa-repeat fa-2x animate__animated animate__rotatIn" style="color: #007bff" />-->
-          <div class="my-4">
-            <b-button v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'" variant="primary" pill class="mt-2 button-text" @click="CreateTradingPair()">
-              Create Pair
-            </b-button>
-            <b-button v-if="PairCheckResp != '0x0000000000000000000000000000000000000000'" variant="primary" pill class="mt-2 button-text" @click="addLiquidity()">
-              <i class="fa-solid fa-plus" /> Add Liquidity
-            </b-button>
-            <b-button variant="primary" pill class="mt-2 button-text" @click="CheckForLiquidityTokens()">
-              <i class="fa-solid fa-coins" /> Check Liquidity Tokens
-            </b-button>
-            <b-button variant="primary" pill class="my-2 button-text" @click="quoteRemoveLiquidity()">
-              <i class="fa-solid fa-minus" /> Remove Liquidity Quote
-            </b-button>
-            <b-button variant="primary" pill class="my-2 button-text" @click="RemoveLiquidity(LiquidityBalance)">
-              <i class="fa-solid fa-minus" /> Remove Liquidity
-            </b-button>
-          </div>
           <span class="label-title">Slippage <i class="fa-solid fa-arrow-up-arrow-down" /></span>
           <b-form-select v-model="SlippageSelected" class="slippage-selector mt-2" :options="SlippageOptions" />
+          <!--<i class="fa-solid fa-repeat fa-2x animate__animated animate__rotatIn" style="color: #007bff" />-->
+          <div class="my-4">
+            <div>
+              <b-button
+                v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'"
+                variant="primary"
+                pill
+                block
+                class="mt-2 button-text"
+                @click="CreateTradingPair()"
+              >
+                Create Pair
+              </b-button>
+              <b-button
+                v-if="PairCheckResp != '0x0000000000000000000000000000000000000000'"
+                variant="primary"
+                pill
+                block
+                class="mt-2 button-text"
+                @click="addLiquidity()"
+              >
+                <i class="fa-solid fa-plus" /> Add Liquidity
+              </b-button>
+              <b-button
+                variant="primary"
+                pill
+                block
+                class="mt-2 button-text"
+                @click="CheckForLiquidityTokens()"
+              >
+                <i class="fa-solid fa-coins" /> Check Liquidity
+              </b-button>
+              <b-button
+                variant="primary"
+                pill
+                block
+                class="my-2 button-text"
+                @click="quoteRemoveLiquidity()"
+              >
+                <i class="fa-solid fa-minus" /> Liquidity Review
+              </b-button>
+              <b-button
+                variant="primary"
+                pill
+                block
+                class="my-2 button-text"
+                @click="RemoveLiquidity(LiquidityBalance)"
+              >
+                <i class="fa-solid fa-minus" /> Remove Liquidity
+              </b-button>
+            </div>
+          </div>
         </div>
       </b-col>
-      <b-col cols="4" class="text-center">
+      <b-col cols="5" class="text-center">
         <SlopSwapLiquidityTakerTokenSelect @changeLiquidityTakerToken="ChangePairTokenB($event)" @changeLiquidityTakerBalance="ChangePairTokenBBalance($event)" />
         <div>
           <b-form-input v-model="TokenBPairAmount" class="taker-liquidity-amount" placeholder="0.0" />
@@ -85,12 +105,43 @@
             {{ TakerDollarAmount }}
           </div>-->
         </div>
-        <div class="text-center mt-4 mb-1" @change="RetrieveUserBalances(TokenA.TokenContract, TokenB.TokenContract)">
+        <div class="text-center mt-1 mb-1" @change="RetrieveUserBalances(TokenA.TokenContract, TokenB.TokenContract)">
           <span class="label-title"><strong>Wallet Balance:</strong> {{ TokenBUserBalance }}</span>
         </div>
       </b-col>
       <b-col cols="12">
-        <div />
+        <div @change="CheckTradingPair()">
+          <div v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'">
+            <div class="no-exist my-1">
+              <i class="fa-solid fa-square-x" /> Pair Does Not Exist Yet!
+            </div>
+            <b-button v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'" pill variant="primary" class="ml-1 mr-1 button-text" @click="CreateTradingPair()">
+              Create Pair
+            </b-button>
+          </div>
+          <div v-else>
+            <div class="lp-pair-container">
+              <h2 class="secondary-title">Your Liquidity Pair</h2>
+              <b-link :href="`https://bscscan.com/token/${PairCheckResp}`" target="_blank">
+                <b-img
+                  :src="require(`@/assets/img/tokens/${TokenA.TokenContract}.svg`)"
+                  fluid
+                  alt="Selected token that user wants to receive"
+                  class="small-pair-token-img"
+                />
+                <span class="small-pair-symbols">{{ TokenA.TokenSymbol }}</span>
+
+                <span class="small-pair-symbols">{{ TokenB.TokenSymbol }}</span>
+                <b-img
+                  :src="require(`@/assets/img/tokens/${TokenB.TokenContract}.svg`)"
+                  fluid
+                  alt="Selected token that user wants to receive"
+                  class="small-pair-token-img"
+                />
+              </b-link>
+            </div>
+          </div>
+        </div>
       </b-col>
     </b-row>
   </b-container>
@@ -228,7 +279,7 @@ export default {
         { ChainID: 56, TokenName: 'Binance-Peg BUSD Token', TokenSymbol: 'BUSD', TokenContract: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', TokenDecimal: 18, TokenStandard: 'Binance-Peg' },
         { ChainID: 56, TokenName: 'Akashic Protocol Project', TokenSymbol: 'AKPP', TokenContract: '0xF2eBD0bBFcfD4ea65eCed347Cb022932CA5c372e', TokenDecimal: 9, TokenStandard: 'Binance-Peg' }
       ],
-      SlippageSelected: 0.05,
+      SlippageSelected: 0.03,
       SlippageOptions: [
         { value: null, text: 'Slippage' },
         { value: 0.01, text: '1%' },
@@ -276,7 +327,8 @@ export default {
       LiquidityBalance: null,
       liquidity: null,
       Aout: null,
-      Bout: null
+      Bout: null,
+      LPTokenCon: { ChainID: 56, TokenName: 'SlopSwap LPs', TokenSymbol: 'SLOP-LP', TokenDecimal: 18, TokenType: 'ERC20', BrandPrimary: '#f0b90b' }
     }
   },
   watch: {
@@ -314,7 +366,8 @@ export default {
       // alert('Signer: ' + signer)
 
       // alert('Before Account Request')
-      // const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      const accounts = await provider.send('eth_requestAccounts', [])
+      const account = accounts[0]
       // alert('After Account Request: ' + account)
 
       const address1 = this.TokenA.TokenContract
@@ -324,6 +377,22 @@ export default {
       // const router = new ethers.Contract(String(this.MainnetRouter), this.MainnetRouterABI, this.signer)
       const pairAddress = await factory.getPair(address1, address2)
 
+      const BEP20LiquidityToken = new ethers.Contract(
+        String(pairAddress), [
+          'function name() view returns (string)',
+          'function symbol() view returns (string)',
+          'function balanceOf(address) view returns (uint)'
+        ],
+        provider
+      )
+
+      const LPTokenBbalance = await BEP20LiquidityToken.balanceOf(String(account))
+      // alert(TokenBbalance)
+      const ReturnTokenBbalance = ethers.utils.formatUnits(String(LPTokenBbalance), this.LPTokenCon.TokenDecimal)
+      this.TokenBUserBalance = ReturnTokenBbalance.substring(0, 8) + ' ' + this.LPTokenCon.TokenSymbol
+
+      alert('LP Token Balance: ' + this.TokenBUserBalance)
+      /*
       alert('Pair Address: ' + pairAddress)
       const LPTokenContract = new ethers.Contract(String(this.MainnetPair), PAIR.abi, provider)
       // alert('After Creation of LP Token Contract Instance')
@@ -344,6 +413,7 @@ export default {
       alert('LP Token Name: ' + LPTokenName)
       const LPTokenFormatter = ethers.utils.formatEther(String(LPTokenBalance))
       alert('SlopSwap LP Token Balance: ' + LPTokenFormatter + '\n' + 'LP Token Address: ' + pairAddress)
+      */
     },
     async quoteRemoveLiquidity (
     ) {
@@ -823,13 +893,13 @@ export default {
     },
     ChangePairTokenA (LiquidityMakerToken) {
       this.TokenA = LiquidityMakerToken
-      alert('Liquidity Token A has been changed to \nChainID: ' + this.TokenA.ChainID + '\nLiquidity Token Name:  ' + this.TokenA.TokenName + ' \nLiquidity Token Symbol: ' + this.TokenA.TokenSymbol + '\nLiquidity Token Contract: ' + this.TokenA.TokenContract + '\nLiquidity Token Decimal: ' + this.TokenA.TokenDecimal + '\nLiquidity Token Type: ' + this.TokenA.TokenType)
+      // alert('Liquidity Token A has been changed to \nChainID: ' + this.TokenA.ChainID + '\nLiquidity Token Name:  ' + this.TokenA.TokenName + ' \nLiquidity Token Symbol: ' + this.TokenA.TokenSymbol + '\nLiquidity Token Contract: ' + this.TokenA.TokenContract + '\nLiquidity Token Decimal: ' + this.TokenA.TokenDecimal + '\nLiquidity Token Type: ' + this.TokenA.TokenType)
       this.CheckTradingPair()
       this.$bvModal.hide('TokenA')
     },
     ChangePairTokenB (LiquidityTakerToken) {
       this.TokenB = LiquidityTakerToken
-      alert('Liquidity Token B has been changed to \nChainID: ' + this.TokenB.ChainID + '\nLiquidity Token Name:  ' + this.TokenB.TokenName + ' \nLiquidity Token Symbol: ' + this.TokenB.TokenSymbol + '\nLiquidity Token Contract: ' + this.TokenB.TokenContract + '\nLiquidity Token Decimal: ' + this.TokenB.TokenDecimal + '\nLiquidity Token Type: ' + this.TokenB.TokenType)
+      // alert('Liquidity Token B has been changed to \nChainID: ' + this.TokenB.ChainID + '\nLiquidity Token Name:  ' + this.TokenB.TokenName + ' \nLiquidity Token Symbol: ' + this.TokenB.TokenSymbol + '\nLiquidity Token Contract: ' + this.TokenB.TokenContract + '\nLiquidity Token Decimal: ' + this.TokenB.TokenDecimal + '\nLiquidity Token Type: ' + this.TokenB.TokenType)
       this.CheckTradingPair()
       this.$bvModal.hide('TokenB')
     },
@@ -990,11 +1060,42 @@ export default {
   font-family: 'Fredoka One', cursive;
   color: #505960;
 }
+.secondary-title {
+  font-variant-caps: all-small-caps;
+  font-size: 1.8rem;
+  font-family: 'Fredoka One', cursive;
+  color: #17a2b8;
+}
+.small-pair-token-img {
+  max-height: 22px;
+}
+.small-pair-symbols {
+  font-variant-caps: all-small-caps;
+  font-size: 1.4rem;
+  font-family: 'Fredoka One', cursive;
+  color: #505960;
+}
+.btn {
+  background-color: #17a2b8;
+  border: 1px solid #FFFFFF;
+}
+.lp-pair-container {
+  background-color: #FFFFFF;
+  border-radius: 4rem;
+  padding: 2rem;
+}
+.lp-pair-container a:hover {
+  text-decoration: none;
+  background-color: #17a2b8;
+  padding: 0.5rem;
+  border-radius: 4rem;
+}
 .link-color {
   font-variant-caps: all-small-caps;
   font-size: 1.3rem;
   font-family: 'Fredoka One', cursive;
-  color: #007bff;
+  color: #17a2b8;
+  text-decoration: none;
 }
 .button-text {
   font-variant-caps: all-small-caps;
@@ -1012,7 +1113,7 @@ export default {
   font-family: 'Fredoka One', cursive;
 }
 .blue-gray {
-  color: #505960;
+  color: #17a2b8;
 }
 .no-exist {
   font-variant-caps: all-small-caps;
@@ -1053,11 +1154,13 @@ export default {
 }
 .maker-liquidity-amount {
   border-radius: 4rem;
-  margin-top: 1rem;
+  margin-top: 0rem;
+  border-color: none;
 }
 .taker-liquidity-amount {
   border-radius: 4rem;
-  margin-top: 1rem;
+  margin-right: 0rem;
+  border-color: none !important;
 }
 .dollar-value {
   font-size: 1.8rem;
