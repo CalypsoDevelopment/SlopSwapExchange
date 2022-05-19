@@ -20,7 +20,11 @@ export default {
       { hid: 'fontawesome', src: 'https://kit.fontawesome.com/3b6ad1dd5e.js', crossorigin: 'anonymous' }
     ]
   },
-
+  generate: {
+    target: 'static',
+    ssr: false,
+    fallback: true
+  },
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
   ],
