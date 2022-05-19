@@ -1,25 +1,25 @@
 <template>
   <b-container class="text-center">
-    <b-row class="taker-token-container">
+    <b-row class="maker-token-container">
       <b-col cols="12">
-        <div class="ttoken-select-container">
+        <div class="mtoken-select-container">
           <b-button
-            class="taker-token-select-btn animate__animated animate__flip"
+            class="maker-token-select-btn animate__animated animate__flip"
             block
-            @click="$bvModal.show('takerselect')"
+            @click="$bvModal.show('liquiditymakerselect')"
           >
             <b-img
-              :src="require(`@/assets/img/tokens/${TakerToken.TokenContract}.svg`)"
+              :src="require(`@/assets/img/tokens/${LiquidityMakerToken.TokenContract}.svg`)"
               fluid
-              alt="Selected token that user wants to receive"
-              class="taker-token-img"
+              alt="Selected token that user wants to trade"
+              class="maker-token-img"
             />
-            {{ TakerToken.TokenSymbol }}
+            {{ LiquidityMakerToken.TokenSymbol }}
             <i class="fa-solid fa-caret-down" />
           </b-button>
 
           <b-modal
-            id="takerselect"
+            id="liquiditymakerselect"
             title="Select Trading Token"
             no-close-on-esc
             no-close-on-backdrop
@@ -28,13 +28,13 @@
             <ul v-for="token in tokens" :key="token.TokenContract" class="my-2">
               <b-link
                 class="maker-link"
-                @click="changeTakerToken(token.ChainID, token.TokenName, token.TokenSymbol, token.TokenContract, token.TokenDecimal, token.TokenType, token.BrandPrimary)"
+                @click="changeLiquidityMakerToken(token.ChainID, token.TokenName, token.TokenSymbol, token.TokenContract, token.TokenDecimal, token.TokenType, token.BrandPrimary)"
               >
                 <b-img
                   :src="require(`@/assets/img/tokens/${token.TokenContract}.svg`)"
                   fluid
                   alt="Selected token that user wants to trade"
-                  class="taker-token-img"
+                  class="maker-token-img"
                 /> {{ token.TokenSymbol }}
               </b-link>
             </ul>
@@ -52,15 +52,15 @@ Console.log('Console.log is now available!')
 const slopswaplib = require('slopswapxlibs')
 const tokenList = require('~/node_modules/slopswapxlibs/tokenLists/BSCTokenList.json')
 export default {
-  name: 'SlopSwapTakerTokenSelect',
+  name: 'SlopSwapLiquidityMakerTokenSelect',
   components: {},
   data () {
     return {
       tokens: tokenList,
-      TakerToken: { ChainID: 56, TokenName: 'PancakeSwap Token (Cake)', TokenSymbol: 'Cake', TokenContract: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', TokenDecimal: 18, TokenType: 'ERC20', BrandPrimary: '#d1884f' },
+      LiquidityMakerToken: { ChainID: 56, TokenName: 'Wrapped BNB', TokenSymbol: 'WBNB', TokenContract: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', TokenDecimal: 18, TokenType: 'BEP-20', BrandPrimary: '#f0b90b' },
       MetamaskConnection: Object,
-      TakerAmount: null,
-      TakerDollarAmount: null
+      LiquidityMakerAmount: null,
+      LiquidityMakerDollarAmount: null
     }
   },
   beforeMount () {
@@ -83,48 +83,48 @@ export default {
         account
       }
     },
-    changeTakerToken (ChainID, TokenName, TokenSymbol, TokenContract, TokenDecimal, TokenType, BrandPrimary) {
-      this.TakerToken = { ChainID: `${ChainID}`, TokenName: `${TokenName}`, TokenSymbol: `${TokenSymbol}`, TokenContract: `${TokenContract}`, TokenDecimal: `${TokenDecimal}`, TokenType: `${TokenType}`, BrandPrimary: `${BrandPrimary}` }
-      this.sellAmount = null
-      this.buyAmount = null
-      this.$bvModal.hide('makerselect')
-      this.$bvModal.hide('takerselect')
+    changeLiquidityMakerToken (ChainID, TokenName, TokenSymbol, TokenContract, TokenDecimal, TokenType, BrandPrimary) {
+      this.LiquidityMakerToken = { ChainID: `${ChainID}`, TokenName: `${TokenName}`, TokenSymbol: `${TokenSymbol}`, TokenContract: `${TokenContract}`, TokenDecimal: `${TokenDecimal}`, TokenType: `${TokenType}`, BrandPrimary: `${BrandPrimary}` }
+      this.LiquidityMakerAmount = null
+      this.LiquidityTakerAmount = null
+      this.$bvModal.hide('liquiditymakerselect')
+      this.$bvModal.hide('liquiditytakerselect')
       // this.$bvModal.hide('TokenA')
       // this.$bvModal.hide('TokenB')
       this.quoteResponse = {}
-      // const TakerTokenContract = this.TakerToken.TokenContract
-      this.$emit('changeTakerTokenBalance', this.TakerToken)
-      this.$emit('changeTakerToken', this.TakerToken)
+      // const MakerTokenContract = this.MakerToken.TokenContract
+      this.$emit('changeLiquidityMakerToken', this.LiquidityMakerToken)
     }
   } // END OF METHODS
 } // END OF EXPORT DEFAULT
 </script>
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-.taker-token-container {
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+.maker-token-container {
   margin-top: 2rem;
   margin-bottom:2rem;
 }
-.ttoken-select-container {
+.mtoken-select-container {
   /* padding: 1rem; */
   /* background-color: #FFFFFF; */
   border-radius: 4rem;
 }
-.taker-token-select-btn {
-  font-family: 'Arimo', sans-serif;
+.maker-token-select-btn {
+  font-family: 'Fredoka One', cursive !important;
+  color: #FFFFFF;
   font-variant: all-small-caps;
   font-weight: 500;
   font-size: 2.6rem;
   padding: 1rem;
   border-radius: 4rem;
 }
-.taker-token-img {
+.maker-token-img {
   max-height: 42px;
 }
-.taker-link {
+.maker-link {
   width: 100%;
 }
-.taker-link:hover {
+.maker-link:hover {
   text-decoration: none;
 }
 .animate__animated.animate__bounce {

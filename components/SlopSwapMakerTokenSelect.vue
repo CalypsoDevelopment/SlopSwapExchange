@@ -50,7 +50,9 @@ import 'animate.css'
 const Console = require('Console')
 Console.log('Console.log is now available!')
 const slopswaplib = require('slopswapxlibs')
+const ethers = require('ethers')
 const tokenList = require('~/node_modules/slopswapxlibs/tokenLists/BSCTokenList.json')
+
 export default {
   name: 'SlopSwapMakerTokenSelect',
   components: {},
@@ -93,7 +95,30 @@ export default {
       // this.$bvModal.hide('TokenB')
       this.quoteResponse = {}
       // const MakerTokenContract = this.MakerToken.TokenContract
+      this.$emit('changeMakerTokenBalance', this.MakerToken)
       this.$emit('changeMakerToken', this.MakerToken)
+    },
+    async RetrieveUserBalances () {
+      // Define Token A & B
+      // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
+      // A Web3Provider wraps a standard Web3 provider, which ism
+      // what MetaMask injects as window.ethereum into each page
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+      // MetaMask requires requesting permission to connect users accounts
+      await provider.send('eth_requestAccounts', [])
+
+      // The MetaMask plugin also allows signing transactions to
+      // send ether and pay to change state within the blockchain.
+      // For this, you need the account signer...
+      // const signer = provider.getSigner()
+      // alert('Signer: ' + signer)
+
+      const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // this.UserAccount = account.address
+      // alert('Wallet User: ' + account)
+      // alert('Before Token Symbol')
+      alert(account)
     }
   } // END OF METHODS
 } // END OF EXPORT DEFAULT

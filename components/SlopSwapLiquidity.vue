@@ -18,30 +18,95 @@
           </b-nav>
         </div>
       </b-col>
-      <b-col cols="5" class="text-center">
-        <SlopSwapMakerTokenSelect />
+      <b-col cols="12">
+        <div>
+          <h1 class="main-title">
+            <span class="blue-gray">Slop</span>Swap Liquidity
+          </h1>
+        </div>
+        <div @change="CheckTradingPair()">
+          <div v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'">
+            <span class="no-exist"><i class="fa-solid fa-square-x" /> Pair Does Not Exist Yet!</span><br>
+            <b-button v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'" pill variant="primary" class="ml-1 mr-1 button-text" @click="CreateTradingPair()">
+              Create Pair
+            </b-button>
+          </div>
+          <div v-else>
+            <span class="label-title">View Pair Information on bscscan.com</span><br>
+            <b-link :href="`https://bscscan.com/token/${PairCheckResp}`" target="_blank">
+              <span class="link-color">{{ PairCheckResp }}</span>
+            </b-link>
+          </div>
+        </div>
       </b-col>
-      <b-col cols="2" class="text-center">
-        <div class="align-middle trade-symbol-container">
-          <i class="fa-solid fa-repeat fa-4x animate__animated animate__rotatIn" style="color: #FFFFFF" />
+      <b-col cols="4" class="text-center">
+        <SlopSwapLiquidityMakerTokenSelect @changeLiquidityMakerToken="ChangePairTokenA($event)" />
+        <div>
+          <b-form-input v-model="TokenAPairAmount" class="maker-liquidity-amount" placeholder="0.0" @change="PairQuoteCheck()" />
+          <!--<div class="mt-2 dollar-value">
+            <i class="fa-solid fa-square-dollar" style="color: #6c757d;" />
+            {{ MakerDollarAmount }}
+          </div>-->
+        </div>
+        <div class="text-center mt-4 mb-1">
+          <span class="label-title"><strong>Wallet Balance:</strong> {{ TokenAUserBalance }}</span>
+        </div>
+      </b-col>
+      <b-col cols="4" class="text-center">
+        <div class="align-middle">
+          <!--<i class="fa-solid fa-repeat fa-2x animate__animated animate__rotatIn" style="color: #007bff" />-->
+          <div class="my-4">
+            <b-button v-if="PairCheckResp === '0x0000000000000000000000000000000000000000'" variant="primary" pill class="mt-2 button-text" @click="CreateTradingPair()">
+              Create Pair
+            </b-button>
+            <b-button v-if="PairCheckResp != '0x0000000000000000000000000000000000000000'" variant="primary" pill class="mt-2 button-text" @click="addLiquidity()">
+              <i class="fa-solid fa-plus" /> Add Liquidity
+            </b-button>
+            <b-button variant="primary" pill class="mt-2 button-text" @click="CheckForLiquidityTokens()">
+              <i class="fa-solid fa-coins" /> Check Liquidity Tokens
+            </b-button>
+            <b-button variant="primary" pill class="my-2 button-text" @click="quoteRemoveLiquidity()">
+              <i class="fa-solid fa-minus" /> Remove Liquidity Quote
+            </b-button>
+            <b-button variant="primary" pill class="my-2 button-text" @click="RemoveLiquidity(LiquidityBalance)">
+              <i class="fa-solid fa-minus" /> Remove Liquidity
+            </b-button>
+          </div>
+          <span class="label-title">Slippage <i class="fa-solid fa-arrow-up-arrow-down" /></span>
           <b-form-select v-model="SlippageSelected" class="slippage-selector mt-2" :options="SlippageOptions" />
         </div>
       </b-col>
-      <b-col cols="5" class="text-center">
-        <SlopSwapTakerTokenSelect />
+      <b-col cols="4" class="text-center">
+        <SlopSwapLiquidityTakerTokenSelect @changeLiquidityTakerToken="ChangePairTokenB($event)" />
+        <div>
+          <b-form-input v-model="TokenBPairAmount" class="taker-liquidity-amount" placeholder="0.0" />
+          <!--<div class="mt-2 dollar-value">
+            <i class="fa-solid fa-square-dollar" style="color: #6c757d;" />
+            {{ TakerDollarAmount }}
+          </div>-->
+        </div>
+        <div class="text-center mt-4 mb-1" @change="RetrieveUserBalances(TokenA.TokenContract, TokenB.TokenContract)">
+          <span class="label-title"><strong>Wallet Balance:</strong> {{ TokenBUserBalance }}</span>
+        </div>
+      </b-col>
+      <b-col cols="12">
+        <div />
       </b-col>
     </b-row>
   </b-container>
 </template>
 <script>
 import axios from 'axios'
-import SlopSwapMakerTokenSelect from '~/components/SlopSwapMakerTokenSelect.vue'
-import SlopSwapTakerTokenSelect from '~/components/SlopSwapTakerTokenSelect.vue'
+import SlopSwapLiquidityMakerTokenSelect from '~/components/SlopSwapLiquidityMakerTokenSelect.vue'
+import SlopSwapLiquidityTakerTokenSelect from '~/components/SlopSwapLiquidityTakerTokenSelect.vue'
 const ethers = require('ethers')
 const qs = require('qs')
-const BEP20 = require('~/static/artifacts/IERC20_metadata.json')
+const BEP20 = require('~/static/artifacts/IERC20.json')
 const PAIR = require('~/static/artifacts/SlopSwapPair.json')
+const ROUTER = require('~/static/artifacts/SlopSwapRouter.json')
+const FACTORY = require('~/static/artifacts/SlopSwapFactory.json')
 
+// SlopSwap Pair Contract 0xD1eAbB3Bce6E50F000463589d137c182B39B179D
 // SlopSwap Factory 0x0533B75362E3Be13E78f245e50674c9a6dd9c17A
 // SlopSwap Router 0x42A77DEdD13520141aaF1720EF88086B5Cae95f5
 // PancakeSwap Factory 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73
@@ -49,11 +114,172 @@ const PAIR = require('~/static/artifacts/SlopSwapPair.json')
 
 export default {
   name: 'SlopSwapLiquidity',
-  components: { SlopSwapMakerTokenSelect, SlopSwapTakerTokenSelect },
+  components: { SlopSwapLiquidityMakerTokenSelect, SlopSwapLiquidityTakerTokenSelect },
   data () {
     return {
-      wbnbcake: null
+      MainnetFactory: '0x0533B75362E3Be13E78f245e50674c9a6dd9c17A',
+      MainnetFactoryABI: [
+        'function getPair(address tokenA, address tokenB) external view returns (address pair)',
+        'function allPairs(uint) external view returns (address pair)',
+        'function allPairsLength() external view returns (uint)',
+        'function createPair(address tokenA, address tokenB) external returns (address pair)',
+        'function feeTo() external view returns (address)',
+        'function feeToSetter() external view returns (address)',
+        'event PairCreated(address indexed token0, address indexed token1, address pair, uint)'
+      ],
+      MainnetPair: '0xD1eAbB3Bce6E50F000463589d137c182B39B179D',
+      MainnetPairABI: [
+        'event Approval(address indexed owner, address indexed spender, uint value)',
+        'event Transfer(address indexed from, address indexed to, uint value)',
+
+        'function name() external pure returns (string memory)',
+        'function symbol() external pure returns (string memory)',
+        'function decimals() external pure returns (uint8)',
+        'function totalSupply() external view returns (uint)',
+        'function balanceOf(address owner) external view returns (uint)',
+        'function allowance(address owner, address spender) external view returns (uint)',
+
+        'function approve(address spender, uint value) external returns (bool)',
+        'function transfer(address to, uint value) external returns (bool)',
+        'function transferFrom(address from, address to, uint value) external returns (bool)',
+
+        'function DOMAIN_SEPARATOR() external view returns (bytes32)',
+        'function PERMIT_TYPEHASH() external pure returns (bytes32)',
+        'function nonces(address owner) external view returns (uint)',
+
+        'function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external',
+        'event Mint(address indexed sender, uint amount0, uint amount1)',
+        'event Burn(address indexed sender, uint amount0, uint amount1, address indexed to)',
+        'event Swap( address indexed sender, uint amount0In, uint amount1In, uint amount0Out, uint amount1Out, address indexed to )',
+        'event Sync(uint112 reserve0, uint112 reserve1)',
+
+        'function MINIMUM_LIQUIDITY() external pure returns (uint)',
+        'function factory() external view returns (address)',
+        'function token0() external view returns (address)',
+        'function token1() external view returns (address)',
+        'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+        'function price0CumulativeLast() external view returns (uint)',
+        'function price1CumulativeLast() external view returns (uint)',
+        'function kLast() external view returns (uint)',
+
+        'function mint(address to) external returns (uint liquidity)',
+        'function burn(address to) external returns (uint amount0, uint amount1)',
+        'function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external',
+        'function skim(address to) external',
+        'function sync() external',
+
+        'function initialize(address, address) external'
+      ],
+      MainnetRouter: '0x42A77DEdD13520141aaF1720EF88086B5Cae95f5',
+      MainnetRouterABI: [
+        'function WETH() external pure returns (address)',
+        'function factory() external pure returns (address)',
+        'function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) public pure returns (uint amountOut)',
+        'function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) public pure returns (uint amountIn)',
+        'function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)',
+        'function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts)',
+        'function quote(uint amountA, uint reserveA, uint reserveB) public pure returns (uint amountB)',
+        'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)',
+        'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
+        'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
+        'function addLiquidity(address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB, uint liquidity)',
+        'function quote(uint amountA, uint reserveA, uint reserveB) internal pure returns (uint amountB)',
+        'function addLiquidityETH( address token, uint amountTokenDesired, uint amountTokenMin, uint amountETHMin, address to, uint deadline ) external payable returns (uint amountToken, uint amountETH, uint liquidity)',
+
+        'function removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline) external returns (uint amountA, uint amountB)',
+        'function removeLiquidityETH(address token, uint liquidity, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external returns (uint amountToken, uint amountETH)',
+        'function removeLiquidityWithPermit(address tokenA,address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline, bool approveMax, uint8 v, bytes32 r, bytes32 s) external returns (uint amountA, uint amountB)',
+
+        'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
+        'function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
+        'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)',
+        'function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
+        'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)',
+        'function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)',
+
+        'function MINIMUM_LIQUIDITY() external pure returns (uint)',
+        'function factory() external view returns (address)',
+        'function token0() external view returns (address)',
+        'function token1() external view returns (address)',
+        'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+        'function price0CumulativeLast() external view returns (uint)',
+        'function price1CumulativeLast() external view returns (uint)',
+        'function kLast() external view returns (uint)'
+      ],
+      WBNB: { ChainID: 56, TokenName: 'Wrapped BNB', TokenSymbol: 'WBNB', TokenContract: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', TokenDecimal: 18 },
+      WBNBABI: [
+        'function name() view returns (string)',
+        'function symbol() view returns (string)',
+        'function balanceOf(address) view returns (uint)',
+        'function approve(address guy, uint wad) public returns (bool)'
+      ],
+      TokenA: { ChainID: 56, TokenName: 'Wrapped BNB', TokenSymbol: 'WBNB', TokenContract: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', TokenDecimal: 18, TokenType: 'ERC20', BrandPrimary: '#f0b90b' },
+      TokenB: { ChainID: 56, TokenName: 'PancakeSwap Token (Cake)', TokenSymbol: 'Cake', TokenContract: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', TokenDecimal: 18, TokenType: 'ERC20', BrandPrimary: '#d1884f' },
+      TokenAPairAmount: null,
+      TokenBPairAmount: null,
+      PairTokenList: [
+        { ChainID: 56, TokenName: 'Wrapped BNB', TokenSymbol: 'WBNB', TokenContract: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', TokenDecimal: 18, TokenStandard: 'BEP-20' },
+        { ChainID: 56, TokenName: 'Binance-Peg Ethereum Token', TokenSymbol: 'WETH', TokenContract: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8', TokenDecimal: 18, TokenStandard: 'Binance-Peg' },
+        { ChainID: 56, TokenName: 'PancakeSwap Token (Cake)', TokenSymbol: 'Cake', TokenContract: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82', TokenDecimal: 18, TokenStandard: 'BEP-20' },
+        { ChainID: 56, TokenName: 'Binance-Peg SHIBA INU Token', TokenSymbol: 'SHIB', TokenContract: '0x2859e4544C4bB03966803b044A93563Bd2D0DD4D', TokenDecimal: 18, TokenStandard: 'Binance-Peg' },
+        { ChainID: 56, TokenName: 'Binance-Peg Dogecoin Token', TokenSymbol: 'DOGE', TokenContract: '0xbA2aE424d960c26247Dd6c32edC70B295c744C43', TokenDecimal: 8, TokenStandard: 'Binance-Peg' },
+        { ChainID: 56, TokenName: 'Binance-Peg Avalanche Token', TokenSymbol: 'AVAX', TokenContract: '0x1CE0c2827e2eF14D5C4f29a091d735A204794041', TokenDecimal: 18, TokenStandard: 'Binance-Peg' },
+        { ChainID: 56, TokenName: 'Binance-Peg Dai Token', TokenSymbol: 'DAI', TokenContract: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3', TokenDecimal: 18, TokenStandard: 'Binance-Peg' },
+        { ChainID: 56, TokenName: 'Binance-Peg BUSD Token', TokenSymbol: 'BUSD', TokenContract: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', TokenDecimal: 18, TokenStandard: 'Binance-Peg' },
+        { ChainID: 56, TokenName: 'Akashic Protocol Project', TokenSymbol: 'AKPP', TokenContract: '0xF2eBD0bBFcfD4ea65eCed347Cb022932CA5c372e', TokenDecimal: 9, TokenStandard: 'Binance-Peg' }
+      ],
+      SlippageSelected: 0.05,
+      SlippageOptions: [
+        { value: null, text: 'Slippage' },
+        { value: 0.01, text: '1%' },
+        { value: 0.02, text: '2%' },
+        { value: 0.03, text: '3%' },
+        { value: 0.04, text: '4%' },
+        { value: 0.05, text: '5%' },
+        { value: 0.06, text: '6%' },
+        { value: 0.07, text: '7%' },
+        { value: 0.08, text: '8%' },
+        { value: 0.09, text: '9%' },
+        { value: 0.1, text: '10%' },
+        { value: 0.11, text: '11%' },
+        { value: 0.12, text: '12%' },
+        { value: 0.13, text: '13%' },
+        { value: 0.14, text: '14%' },
+        { value: 0.15, text: '15%' },
+        { value: 0.16, text: '16%' },
+        { value: 0.17, text: '17%' },
+        { value: 0.18, text: '18%' },
+        { value: 0.19, text: '19%' },
+        { value: 0.20, text: '20%' },
+        { value: 0.21, text: '21%' },
+        { value: 0.22, text: '22%' },
+        { value: 0.23, text: '23%' },
+        { value: 0.24, text: '24%' },
+        { value: 0.25, text: '25%' }
+      ],
+      config: {
+        START_COIN: 'WBNB',
+        START_AMOUNT: 0.001,
+        WALLET_MIN: 0,
+        TRADE_INTERVAL: 300,
+        SLIPPAGE: 5,
+        GWEI: 5,
+        GAS_LIMIT: 450000,
+        BSC_NODE: 'https://bsc-dataseed.binance.org/'
+      },
+      PairCheckResp: '0x0000000000000000000000000000000000000000',
+      signer: null,
+      account: null,
+      TokenAUserBalance: null,
+      TokenBUserBalance: null,
+      UserAccount: null,
+      LiquidityBalance: null,
+      liquidity: null,
+      Aout: null,
+      Bout: null
     }
+  },
+  watch: {
   },
   mounted () {
     // URL connection
@@ -67,10 +293,14 @@ export default {
       conn.send(JSON.stringify({ method: 'subscribe', topic: 'kline_1h', symbols: ['BNB_BTCB-1DE'] }))
     } */
   },
+  beforeMount () {
+    this.CheckTradingPair()
+    this.RetrieveUserBalances()
+  },
   methods: {
     async CheckForLiquidityTokens () {
       // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
-      // A Web3Provider wraps a standard Web3 provider, which ism
+      // A Web3Provider wraps a standard Web3 provider, which is
       // what MetaMask injects as window.ethereum into each page
       const provider = new ethers.providers.Web3Provider(window.ethereum)
 
@@ -90,18 +320,24 @@ export default {
       const address1 = this.TokenA.TokenContract
       const address2 = this.TokenB.TokenContract
 
-      const factory = new ethers.Contract(String(this.MainnetFactory), this.MainnetFactoryABI, signer)
+      const factory = new ethers.Contract(String(this.MainnetFactory), FACTORY.abi, signer)
       // const router = new ethers.Contract(String(this.MainnetRouter), this.MainnetRouterABI, this.signer)
       const pairAddress = await factory.getPair(address1, address2)
 
       alert('Pair Address: ' + pairAddress)
-      const LPTokenContract = new ethers.Contract(String(this.MainnetPair), this.MainnetPairABI, signer)
+      const LPTokenContract = new ethers.Contract(String(this.MainnetPair), PAIR.abi, provider)
       // alert('After Creation of LP Token Contract Instance')
 
-      const BEP20TokenContract = new ethers.Contract(pairAddress, BEP20, provider)
+      alert('Line 324')
+      const RetrieveReserves = await LPTokenContract.getReserves()
+      alert('Reserves Request Return ' + RetrieveReserves)
 
-      const LPTokenBalance = await BEP20TokenContract.balanceOf(String('0x0684e0e2d497442d848666122ababa2a28d0eca7'))
+      const BEP20TokenContract = new ethers.Contract(pairAddress, BEP20.abi, provider)
+      alert('Line 325')
+      const LPTokenBalance = await BEP20TokenContract.balanceOf(String(pairAddress))
+      alert('Line 327')
       this.LiquidityBalance = ethers.utils.formatEther(String(LPTokenBalance))
+      alert('Liquidity Balance: ' + this.LiquidityBalance)
       const LPTokenName = await LPTokenContract.name()
       const LPTokenTotalSupply = await LPTokenContract.totalSupply()
       alert(LPTokenName + ' Total Supply: ' + ethers.utils.formatEther(String(LPTokenTotalSupply)))
@@ -137,7 +373,7 @@ export default {
 
       const liquidity = this.LiquidityBalance
 
-      const factory = new ethers.Contract(String(this.MainnetFactory), this.MainnetFactoryABI, signer)
+      const factory = new ethers.Contract(String(this.MainnetFactory), FACTORY.abi, signer)
       // const router = new ethers.Contract(String(this.MainnetRouter), this.MainnetRouterABI, this.signer)
 
       const address1 = this.TokenA.TokenContract
@@ -145,7 +381,7 @@ export default {
 
       const pairAddress = await factory.getPair(String(address1), String(address2))
       alert('Pair Address: ' + pairAddress)
-      const pair = new ethers.Contract(this.MainnetPair, PAIR, signer)
+      const pair = new ethers.Contract(this.MainnetPair, PAIR.abi, signer)
       // alert('After Creating Pair Contract Instance')
 
       // alert('Before reserves Raw request')
@@ -344,7 +580,6 @@ export default {
         const ReturnTokenAbalance = ethers.utils.formatUnits(String(TokenAbalance), this.TokenA.TokenDecimal)
         this.TokenAUserBalance = ReturnTokenAbalance.substring(0, 8) + ' ' + this.TokenA.TokenSymbol
       }
-
       const BEP20TokenB = new ethers.Contract(
         this.TokenB.TokenContract, [
           'function name() view returns (string)',
@@ -353,6 +588,7 @@ export default {
         ],
         provider
       )
+
       const TokenBbalance = await BEP20TokenB.balanceOf(String(account))
       // alert(TokenBbalance)
       const ReturnTokenBbalance = ethers.utils.formatUnits(String(TokenBbalance), this.TokenB.TokenDecimal)
@@ -391,16 +627,16 @@ export default {
 
       const address1 = this.TokenA.TokenContract
       const address2 = this.TokenB.TokenContract
-      alert('After Token Address Assign Line 256')
-      const RouterContract = new ethers.Contract(String(this.MainnetRouter), this.MainnetRouterABI, this.signer)
-
-      const TokenAContract = new ethers.Contract(String(address1), BEP20, this.signer)
-      const TokenBContract = new ethers.Contract(String(address2), BEP20, this.signer)
+      alert('After Token Address Assign Line 618')
+      const RouterContract = new ethers.Contract(String(this.MainnetRouter), ROUTER.abi, this.signer)
+      alert('Line 620')
+      const TokenAContract = new ethers.Contract(String(address1), BEP20.abi, this.signer)
+      const TokenBContract = new ethers.Contract(String(address2), BEP20.abi, this.signer)
       alert('After Token Contact Instance Creation Line 261')
 
       const TokenADecimals = this.TokenA.TokenDecimal
       const TokenBDecimals = this.TokenB.TokenDecimal
-      alert('TokenADecimals & TokenBDecimals ' + TokenADecimals + ' ' + TokenBDecimals + ' Line 265')
+      alert('TokenADecimals & TokenBDecimals ' + TokenADecimals + ' ' + TokenBDecimals + ' Line 627')
 
       const amount1 = this.TokenAPairAmount
       const amount2 = this.TokenBPairAmount
@@ -483,13 +719,15 @@ export default {
         )
       }
     },
-    ChangePairTokenA (TokenName, TokenSymbol, TokenContract) {
-      this.TokenA = { TokenName, TokenSymbol, TokenContract }
+    ChangePairTokenA (LiquidityMakerToken) {
+      this.TokenA = LiquidityMakerToken
+      alert('Liquidity Token A has been changed to \nChainID: ' + this.TokenA.ChainID + '\nLiquidity Token Name:  ' + this.TokenA.TokenName + ' \nLiquidity Token Symbol: ' + this.TokenA.TokenSymbol + '\nLiquidity Token Contract: ' + this.TokenA.TokenContract + '\nLiquidity Token Decimal: ' + this.TokenA.TokenDecimal + '\nLiquidity Token Type: ' + this.TokenA.TokenType)
       this.CheckTradingPair()
       this.$bvModal.hide('TokenA')
     },
-    ChangePairTokenB (TokenName, TokenSymbol, TokenContract) {
-      this.TokenB = { TokenName, TokenSymbol, TokenContract }
+    ChangePairTokenB (LiquidityTakerToken) {
+      this.TokenB = LiquidityTakerToken
+      alert('Liquidity Token B has been changed to \nChainID: ' + this.TokenB.ChainID + '\nLiquidity Token Name:  ' + this.TokenB.TokenName + ' \nLiquidity Token Symbol: ' + this.TokenB.TokenSymbol + '\nLiquidity Token Contract: ' + this.TokenB.TokenContract + '\nLiquidity Token Decimal: ' + this.TokenB.TokenDecimal + '\nLiquidity Token Type: ' + this.TokenB.TokenType)
       this.CheckTradingPair()
       this.$bvModal.hide('TokenB')
     },
@@ -639,10 +877,91 @@ export default {
       }
       // alert(this.PairCheckResp)
     } // END OF CHECKPAIR
-
   } // END OF METHODS
 }
 </script>
 <style scoped>
-
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+.label-title {
+  font-variant-caps: all-small-caps;
+  font-size: 1.3rem;
+  font-family: 'Fredoka One', cursive;
+  color: #505960;
+}
+.link-color {
+  font-variant-caps: all-small-caps;
+  font-size: 1.3rem;
+  font-family: 'Fredoka One', cursive;
+  color: #007bff;
+}
+.button-text {
+  font-variant-caps: all-small-caps;
+  font-size: 0.85rem;
+  color: #FFFFFF;
+}
+.dropdown-toggle {
+  background-color: transparent;
+  border-radius: 4rem;
+}
+.main-title {
+  font-variant-caps: all-small-caps;
+  font-weight: 600;
+  font-size: 2.9rem;
+  font-family: 'Fredoka One', cursive;
+}
+.blue-gray {
+  color: #505960;
+}
+.no-exist {
+  font-variant-caps: all-small-caps;
+  font-weight: 600;
+  font-size: 1.3rem;
+  font-family: 'Fredoka One', cursive;
+  color: #ac0000;
+}
+.view-pair {
+  font-variant-caps: all-small-caps;
+  font-family: 'Arimo', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.left-group-btn {
+  border-top-left-radius: 4rem;
+  border-bottom-left-radius: 4rem;
+}
+.right-group-btn {
+  border-top-right-radius: 4rem;
+  border-bottom-right-radius: 4rem;
+}
+.slippage-selector {
+  background-color: transparent;
+  border-radius: 4rem;
+}
+.trade-container {
+  margin-top: 8rem;
+  margin-bottom: auto;
+  vertical-align: middle;
+}
+.trade-btn {
+  padding: .25rem;
+  margin-top: 2rem;
+  font-size: 1.6rem;
+  font-family: 'Arimo', sans-serif;
+  font-variant: all-small-caps;
+}
+.maker-liquidity-amount {
+  border-radius: 4rem;
+  margin-top: 1rem;
+}
+.taker-liquidity-amount {
+  border-radius: 4rem;
+  margin-top: 1rem;
+}
+.dollar-value {
+  font-size: 1.8rem;
+}
+.trade-symbol-container {
+  margin-top: 3rem;
+  margin-bottom:2rem;
+}
 </style>

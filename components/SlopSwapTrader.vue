@@ -19,13 +19,19 @@
         </div>
       </b-col>
       <b-col cols="5" class="text-center">
-        <SlopSwapMakerTokenSelect @changeMakerToken="ChangeSellToken($event)" />
+        <SlopSwapMakerTokenSelect @changeMakerToken="ChangeSellToken($event)" @changeMakerTokenBalance="MakerReCheckBalance($event)" />
         <div>
           <b-form-input v-model="sellAmount" class="maker-token-amount" placeholder="0.0" @change="MakerPriceCheck()" />
           <!--<div class="mt-2 dollar-value">
             <i class="fa-solid fa-square-dollar" style="color: #6c757d;" />
             {{ MakerDollarAmount }}
           </div>-->
+        </div>
+        <div>
+          <div class="mt-2">
+            Wallet Balance: {{ SellTokenUserBalance }}
+          </div>
+          <b-form-input v-model="SellTokenUserBalance" placeholder="Wallet Balance" disabled class="hidden-field" />
         </div>
       </b-col>
       <b-col cols="2" class="text-center">
@@ -35,7 +41,7 @@
         </div>
       </b-col>
       <b-col cols="5" class="text-center">
-        <SlopSwapTakerTokenSelect @changeTakerToken="ChangeBuyToken($event)" />
+        <SlopSwapTakerTokenSelect @changeTakerToken="ChangeBuyToken($event)" @changeTakerTokenBalance="TakerReCheckBalance($event)" />
         <div>
           <b-form-input v-model="BuyTokenAmount" class="taker-token-amount" placeholder="0.0" />
           <!--<div class="mt-2 dollar-value">
@@ -43,13 +49,23 @@
             {{ TakerDollarAmount }}
           </div>-->
         </div>
+        <div>
+          <div class="mt-2">
+            Wallet Balance: {{ BuyTokenUserBalance }}
+          </div>
+          <b-form-input v-model="BuyTokenUserBalance" placeholder="Wallet Balance" disabled class="hidden-field" />
+        </div>
       </b-col>
       <b-col cols="12">
         <div class="trade-btn-container mt-4">
           <b-button-group size="lg">
-            <b-button class="left-group-btn" @click="TokenTrade()">Trade Quote</b-button>
+            <b-button class="left-group-btn" @click="TokenTrade()">
+              Trade Quote
+            </b-button>
             <!--<b-button>Button 2</b-button>-->
-            <b-button class="right-group-btn" variant="info" @click="buyAction(sellAmount)">Make Trade</b-button>
+            <b-button class="right-group-btn" variant="info" @click="buyAction(sellAmount)">
+              Make Trade
+            </b-button>
           </b-button-group>
         </div>
         <!--<b-button
@@ -78,6 +94,7 @@ const Console = require('Console')
 Console.log('Console.log is now available!')
 const FACTORY = require('~/static/artifacts/SlopSwapFactory.json')
 const ROUTER = require('~/static/artifacts/SlopSwapRouter.json')
+// const BEP20 = require('~/static/artifacts/IERC20.json')
 // const slop = require('slopswapxlibs')
 
 // SlopSwap Factory 0x0533B75362E3Be13E78f245e50674c9a6dd9c17A
@@ -145,6 +162,8 @@ export default {
       tokenIn: null,
       tokenOut: null,
       WBNBbalance: null,
+      SellTokenUserBalance: null,
+      BuyTokenUserBalance: null,
       config: {
         START_COIN: 'WBNB',
         START_AMOUNT: 0.001,
@@ -158,6 +177,7 @@ export default {
     }
   },
   beforeMount () {
+    this.checkBalance(this.sellToken.TokenContract, this.buyTokenContract)
   },
   methods: {
     async TokenTrade () {
@@ -240,7 +260,164 @@ export default {
       const checkSignerAddress = signer.getAddress()
       alert('Token In (Sell Token) ' + this.tokenIn + ' Token Out (Buy Token) ' + this.tokenOut + ' Traders Address: ' + checkSignerAddress)
     }, // END OF TOKENTRADE()
+    async MakerReCheckBalance (sellTok) {
+      // Define Token A & B
+      // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
+      // A Web3Provider wraps a standard Web3 provider, which ism
+      // what MetaMask injects as window.ethereum into each page
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
 
+      // MetaMask requires requesting permission to connect users accounts
+      await provider.send('eth_requestAccounts', [])
+
+      // The MetaMask plugin also allows signing transactions to
+      // send ether and pay to change state within the blockchain.
+      // For this, you need the account signer...
+      // const signer = provider.getSigner()
+      // alert('Signer: ' + signer)
+
+      const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // this.UserAccount = account.address
+      // alert('Wallet User: ' + account)
+      // alert('Before Token Symbol')
+
+      if (sellTok.TokenSymbol === 'WBNB') {
+        // Get Token Balance through Metamask
+        const sellTokenBalance = await provider.getBalance(String(account))
+        // alert(TokenABalance)
+        const ReturnSellTokenBalance = ethers.utils.formatEther(String(sellTokenBalance))
+        // alert('User TokenA Balance: ' + ConvertWeiToEther + ' WBNB')
+
+        this.SellTokenUserBalance = ReturnSellTokenBalance.substring(0, 6) + ' ' + sellTok.TokenSymbol
+      } else {
+        const BEP20sellToken = new ethers.Contract(
+          sellTok.TokenContract, [
+            'function name() view returns (string)',
+            'function symbol() view returns (string)',
+            'function balanceOf(address) view returns (uint)'
+          ],
+          provider
+        )
+        const sellTokenbalance = await BEP20sellToken.balanceOf(String(account))
+        // alert(TokenAbalance)
+        const ReturnSellTokenbalance = ethers.utils.formatUnits(String(sellTokenbalance), sellTok.TokenDecimal)
+        this.SellTokenUserBalance = ReturnSellTokenbalance.substring(0, 8) + ' ' + sellTok.TokenSymbol
+      }
+      const BEP20BuyToken = new ethers.Contract(
+        this.buyToken.TokenContract, [
+          'function name() view returns (string)',
+          'function symbol() view returns (string)',
+          'function balanceOf(address) view returns (uint)'
+        ],
+        provider
+      )
+
+      const buyTokenbalance = await BEP20BuyToken.balanceOf(String(account))
+      // alert(buyTokenbalance)
+      const ReturnBuyTokenbalance = ethers.utils.formatUnits(String(buyTokenbalance), this.buyToken.TokenDecimal)
+      this.BuyTokenUserBalance = ReturnBuyTokenbalance.substring(0, 8) + ' ' + this.buyToken.TokenSymbol
+    },
+    async TakerReCheckBalance (buyTok) {
+      // Define Token A & B
+      // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
+      // A Web3Provider wraps a standard Web3 provider, which ism
+      // what MetaMask injects as window.ethereum into each page
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+      // MetaMask requires requesting permission to connect users accounts
+      await provider.send('eth_requestAccounts', [])
+
+      // The MetaMask plugin also allows signing transactions to
+      // send ether and pay to change state within the blockchain.
+      // For this, you need the account signer...
+      // const signer = provider.getSigner()
+      // alert('Signer: ' + signer)
+
+      const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // this.UserAccount = account.address
+      // alert('Wallet User: ' + account)
+      // alert('Before Token Symbol')
+      if (buyTok.TokenSymbol === 'WBNB') {
+        // Get Token Balance through Metamask
+        const buyTokenBalance = await provider.getBalance(String(account))
+        // alert(TokenABalance)
+        const ReturnBuyTokenBalance = ethers.utils.formatEther(String(buyTokenBalance))
+        // alert('User TokenA Balance: ' + ConvertWeiToEther + ' WBNB')
+
+        this.BuyTokenUserBalance = ReturnBuyTokenBalance.substring(0, 6) + ' ' + buyTok.TokenSymbol
+      } else {
+        const BEP20BuyToken = new ethers.Contract(
+          buyTok.TokenContract, [
+            'function name() view returns (string)',
+            'function symbol() view returns (string)',
+            'function balanceOf(address) view returns (uint)'
+          ],
+          provider
+        )
+
+        const buyTokenbalance = await BEP20BuyToken.balanceOf(String(account))
+        // alert(buyTokenbalance)
+        const ReturnBuyTokenbalance = ethers.utils.formatUnits(String(buyTokenbalance), buyTok.TokenDecimal)
+        this.BuyTokenUserBalance = ReturnBuyTokenbalance.substring(0, 8) + ' ' + buyTok.TokenSymbol
+      }
+    },
+    async checkBalance () {
+      // Define Token A & B
+      // Establish the connection to the User wallet & query Token A (Primary Liquidity Token) balance within the wallet
+      // A Web3Provider wraps a standard Web3 provider, which ism
+      // what MetaMask injects as window.ethereum into each page
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+
+      // MetaMask requires requesting permission to connect users accounts
+      await provider.send('eth_requestAccounts', [])
+
+      // The MetaMask plugin also allows signing transactions to
+      // send ether and pay to change state within the blockchain.
+      // For this, you need the account signer...
+      // const signer = provider.getSigner()
+      // alert('Signer: ' + signer)
+
+      const account = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // this.UserAccount = account.address
+      // alert('Wallet User: ' + account)
+      // alert('Before Token Symbol')
+
+      if (this.sellToken.TokenSymbol === 'WBNB') {
+        // Get Token Balance through Metamask
+        const sellTokenBalance = await provider.getBalance(String(account))
+        // alert(TokenABalance)
+        const ReturnSellTokenBalance = ethers.utils.formatEther(String(sellTokenBalance))
+        // alert('User TokenA Balance: ' + ConvertWeiToEther + ' WBNB')
+
+        this.SellTokenUserBalance = ReturnSellTokenBalance.substring(0, 6) + ' ' + this.sellToken.TokenSymbol
+      } else {
+        const BEP20sellToken = new ethers.Contract(
+          this.sellToken.TokenContract, [
+            'function name() view returns (string)',
+            'function symbol() view returns (string)',
+            'function balanceOf(address) view returns (uint)'
+          ],
+          provider
+        )
+        const sellTokenbalance = await BEP20sellToken.balanceOf(String(account))
+        // alert(TokenAbalance)
+        const ReturnSellTokenbalance = ethers.utils.formatUnits(String(sellTokenbalance), this.TokenA.TokenDecimal)
+        this.SellTokenUserBalance = ReturnSellTokenbalance.substring(0, 8) + ' ' + this.sellToken.TokenSymbol
+      }
+      const BEP20BuyToken = new ethers.Contract(
+        this.buyToken.TokenContract, [
+          'function name() view returns (string)',
+          'function symbol() view returns (string)',
+          'function balanceOf(address) view returns (uint)'
+        ],
+        provider
+      )
+
+      const buyTokenbalance = await BEP20BuyToken.balanceOf(String(account))
+      // alert(buyTokenbalance)
+      const ReturnBuyTokenbalance = ethers.utils.formatUnits(String(buyTokenbalance), this.buyToken.TokenDecimal)
+      this.BuyTokenUserBalance = ReturnBuyTokenbalance.substring(0, 8) + ' ' + this.buyToken.TokenSymbol
+    },
     async buyAction (sellQuantity) {
       // const provider = new ethers.providers.JsonRpcProvider()
       // A Web3Provider wraps a standard Web3 provider, which is
@@ -342,6 +519,7 @@ export default {
       // Units.convert(String(this.quote.data.buyAmount), 'wei', 'ether')
     },
     ChangeSellToken (MakerToken) {
+      alert(MakerToken.TokenContract)
       this.sellToken = MakerToken
       alert('The Sell Token has been changed to \nChainID ' + this.sellToken.ChainID + '\nSell Token Name:  ' + this.sellToken.TokenName + ' \nSell Token Symbol: ' + this.sellToken.TokenSymbol + '\nSell Token Contract: ' + this.sellToken.TokenContract + '\nSell Token Decimal: ' + this.sellToken.TokenDecimal + '\nSell Token Type: ' + this.buyToken.TokenType)
       this.sellAmount = null
@@ -360,8 +538,8 @@ export default {
 </script>
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-.trade-btn-container {
-
+.hidden-field {
+  visibility: hidden;
 }
 .left-group-btn {
   border-top-left-radius: 4rem;
