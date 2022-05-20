@@ -22,7 +22,7 @@ export default {
   },
   generate: {
     target: 'static',
-    ssr: false,
+    ssr: true,
     fallback: true
   },
   // Global CSS: https://go.nuxtjs.dev/config-css
