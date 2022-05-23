@@ -4,7 +4,7 @@
       <b-col cols="12">
         <div class="ttoken-select-container">
           <b-button
-            class="taker-token-select-btn animate__animated animate__flip"
+            class="taker-token-select-btn"
             block
             @click="$bvModal.show('liquiditytakerselect')"
           >

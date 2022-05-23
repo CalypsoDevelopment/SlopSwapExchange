@@ -4,7 +4,7 @@
       <b-col cols="12">
         <div class="mtoken-select-container">
           <b-button
-            class="maker-token-select-btn animate__animated animate__flip"
+            class="maker-token-select-btn"
             block
             @click="$bvModal.show('makerselect')"
           >

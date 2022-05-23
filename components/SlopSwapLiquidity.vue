@@ -121,7 +121,9 @@
           </div>
           <div v-else>
             <div class="lp-pair-container">
-              <h2 class="secondary-title">Your Liquidity Pair</h2>
+              <h2 class="secondary-title">
+                Your Liquidity Pair
+              </h2>
               <b-link :href="`https://bscscan.com/token/${PairCheckResp}`" target="_blank">
                 <b-img
                   :src="require(`@/assets/img/tokens/${TokenA.TokenContract}.png`)"

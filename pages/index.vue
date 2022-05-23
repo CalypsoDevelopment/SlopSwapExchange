@@ -17,11 +17,10 @@
 <script>
 import TopNavigationBarSimple from '~/components/TopNavigationBarSimple.vue'
 import SlopSwapTrader from '~/components/SlopSwapTrader.vue'
-import BSCPairsApp from '~/components/BSCPairsApp.vue'
 
 export default {
   name: 'IndexPage',
-  components: { SlopSwapTrader, TopNavigationBarSimple, BSCPairsApp }
+  components: { SlopSwapTrader, TopNavigationBarSimple }
 }
 </script>
 <style scoped>
